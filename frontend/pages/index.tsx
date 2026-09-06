@@ -22,11 +22,12 @@ interface EventRow {
   attempts: Attempt[];
 }
 
-export default function OpsPage({ events }: { events: EventRow[] }) {
+export default function OpsPage({ events, error }: { events: EventRow[]; error: string | null }) {
   return (
     <div style={{ fontFamily: 'sans-serif', padding: 24 }}>
       <h1>Webhook events</h1>
       <p>Plain HTML page</p>
+      {error && <p style={{ color: 'red' }}>Could not load events: {error}</p>}
       <table border={1} cellPadding={6}>
         <thead>
           <tr>
@@ -94,7 +95,17 @@ export default function OpsPage({ events }: { events: EventRow[] }) {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const res = await fetch(`${API_URL}/events`);
-  const events = await res.json();
-  return { props: { events } };
+  try {
+    const res = await fetch(`${API_URL}/events`);
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`GET ${API_URL}/events -> ${res.status}: ${body}`);
+      return { props: { events: [], error: `API returned ${res.status}` } };
+    }
+    const events = await res.json();
+    return { props: { events: Array.isArray(events) ? events : [], error: null } };
+  } catch (err) {
+    console.error(`Could not reach API at ${API_URL}`, err);
+    return { props: { events: [], error: `Could not reach API at ${API_URL}` } };
+  }
 };
