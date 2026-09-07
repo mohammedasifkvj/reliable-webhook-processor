@@ -2,6 +2,10 @@ import { GetServerSideProps } from 'next';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001';
 
+function formatDateTime(iso: string): string {
+  return iso.replace('T', ' ').replace(/\.\d+Z$/, ' UTC');
+}
+
 interface Attempt {
   attempt_number: number;
   worker_id: string;
@@ -49,7 +53,7 @@ export default function OpsPage({ events, error }: { events: EventRow[]; error: 
               <td>
                 {e.attempt_count} / {e.max_attempts}
               </td>
-              <td>{new Date(e.updated_at).toLocaleString()}</td>
+              <td>{formatDateTime(e.updated_at)}</td>
               <td>
                 <details>
                   <summary>{e.attempts.length} attempt(s)</summary>
@@ -69,8 +73,8 @@ export default function OpsPage({ events, error }: { events: EventRow[]; error: 
                         <tr key={a.attempt_number}>
                           <td>{a.attempt_number}</td>
                           <td>{a.worker_id}</td>
-                          <td>{new Date(a.started_at).toLocaleTimeString()}</td>
-                          <td>{a.finished_at ? new Date(a.finished_at).toLocaleTimeString() : '—'}</td>
+                          <td>{formatDateTime(a.started_at)}</td>
+                          <td>{a.finished_at ? formatDateTime(a.finished_at) : '—'}</td>
                           <td>{a.result}</td>
                           <td>{a.error ?? '—'}</td>
                         </tr>
